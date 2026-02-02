@@ -4,21 +4,24 @@ version = "0.1.0"
 description = "Minimal demo project inspired by dropping universal wheel for Python 2."
 requires-python = ">=3.7"
 classifiers = [
-    "Programming Language :: Python :: 2.7",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
 ]
 
 [project.optional-dependencies]
 dev = ["pytest", "tomli"]
 
 [tool.wheel]
-# Baseline 状态错误地声明为 universal wheel（同时支持 Python 2 和 3）
-universal = true
+# This project is Python 3 only; do not publish a universal (py2 + py3) wheel.
+universal = false
 
 [tool.ci]
-# Baseline 只在 3.8 上跑，没有包含 3.9
-python-versions = ["3.8"]
+# CI should cover at least Python 3.9 in addition to other supported 3.x versions.
+python-versions = ["3.8", "3.9", "3.10"]
 
 [tool.isort]
-# Baseline 使用默认 profile，而不是 Black profile
-profile = "default"
+# Align isort with Black formatting style
+profile = "black"
