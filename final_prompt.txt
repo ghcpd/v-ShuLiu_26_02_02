@@ -1,0 +1,110 @@
+**Role & Objective**
+You are an AI assistant acting as a maintenance engineer for a small Python project. Your objective is to update configuration, CI, tooling, and tests to satisfy specific maintenance requirements while preserving all existing business behavior.
+
+**Inputs & Context**
+- The current working directory is the project root.
+- Project layout:
+  - `src/prettytable_pr78_demo/`: contains a very small example library with minimal business code.
+  - `tests/`: contains tests that currently check configuration-related behavior.
+  - `pyproject.toml`: contains project metadata, wheel configuration, isort configuration, and a simplified "CI target Python versions" section.
+  - `requirements.txt`: lists development dependencies (e.g., `pytest` and `tomli`/`tomllib` for parsing `pyproject.toml`).
+  - A prompt file describing the maintenance task (this description).
+- The project effectively only supports Python 3, but the baseline packaging configuration currently claims a universal wheel (Python 2 + 3).
+- The CI configuration does not yet include Python 3.9 in its target versions.
+- isort and related tooling are not yet configured to use the Black profile.
+- The environment is:
+  - OS: Windows 10 or later.
+  - Python: version 3.10 or later available.
+
+**Step-by-Step Instructions**
+1. **Environment Setup**
+   - In the project root, create a virtual environment:
+     - Run: `python -m venv .venv`.
+   - Activate the virtual environment (PowerShell example):
+     - Run: `.venv\\Scripts\\Activate.ps1`.
+   - Install project dependencies into this virtual environment:
+     - Run: `pip install -r requirements.txt`.
+
+2. **Packaging and Metadata Fixes in pyproject.toml**
+   - Open `pyproject.toml`.
+   - In the `[project]` section:
+     - Ensure `requires-python` specifies a Python 3-only requirement (e.g., `">=3.7"` or stricter), with no implication of Python 2 support.
+     - Update the `classifiers` list so that:
+       - All Python 2-related classifiers are removed (e.g., `"Programming Language :: Python :: 2.7"`, any `"Programming Language :: Python :: 2"` entries).
+       - Classifiers make clear that the project is Python 3-only (e.g., include `"Programming Language :: Python :: 3"` and optionally `"Programming Language :: Python :: 3 :: Only"`).
+   - In the `[tool.wheel]` section:
+     - Ensure the wheel is **not** marked as universal (Python 2 + 3). Concretely, the configuration must not claim a universal wheel; for example, set `universal = false` or remove/adjust any setting that marks the wheel as universal.
+
+3. **CI Target Versions Update in pyproject.toml**
+   - In the `[tool.ci]` section of `pyproject.toml`:
+     - Update the `python-versions` configuration so that it includes at least Python 3.9.
+     - You may also include other Python 3 versions (e.g., `"3.8"`, `"3.10"`, etc.), but the set of versions must clearly indicate that the project targets only Python 3 and explicitly includes `"3.9"`.
+
+4. **isort Configuration in pyproject.toml**
+   - In the `[tool.isort]` section of `pyproject.toml`:
+     - Configure isort to use the Black profile by setting `profile = "black"`.
+     - Remove or adjust any conflicting settings so that the Black profile is clearly in effect.
+
+5. **Business Code Preservation**
+   - Inspect the business code under `src/prettytable_pr78_demo/`.
+   - Do **not** change the externally observable behavior of any public functions or classes in this package (for example, a function like `format_table`).
+   - Only modify business code if it is strictly required by a dependency or configuration change, and if so, keep such changes minimal and behaviorally equivalent from the caller’s perspective.
+
+6. **Add Self-Check Tests**
+   - In the `tests/` directory, add at least one new test file or at least one new test case that acts as a self-check for this maintenance task.
+   - The new tests must use `tomli`/`tomllib` or equivalent to parse `pyproject.toml` and assert that your configuration changes have taken effect, including at least:
+     - There are **no** Python 2-related classifiers under `project.classifiers`.
+     - The wheel configuration is **not** universal (e.g., `[tool.wheel].universal` is absent or false).
+     - The CI target versions under `[tool.ci].python-versions` include the string `"3.9"`.
+     - The isort configuration under `[tool.isort].profile` is set to `"black"`.
+   - Add tests that assert that the core business function(s) in `prettytable_pr78_demo` still behave correctly for typical and edge-case inputs. For example:
+     - A normal case where valid headers and rows are passed and the output matches the expected formatted representation.
+     - An edge case such as empty headers, where the current behavior (e.g., raising a `ValueError`) must remain unchanged.
+   - Design these tests so that they would fail on the original baseline configuration and pass only after your maintenance changes are applied.
+
+7. **README Updates**
+   - Create or update `README.md` in the project root.
+   - Ensure it contains at least the following information:
+     - A short description of the project and the maintenance task (without referencing any external repository or PR this scenario may be inspired by).
+     - Clear, step-by-step instructions to create and activate the virtual environment (including a PowerShell example on Windows).
+     - Clear instructions for installing dependencies using `pip install -r requirements.txt`.
+     - Clear instructions for running the self-check commands, at minimum:
+       - How to run `pytest`.
+       - Any other tools you wire in (if applicable), each with concrete example commands.
+     - If any structured report files (such as `report.json`) are introduced, describe what they contain and where they are located (you do not need to introduce such files unless required by your own design).
+
+8. **Self-Check Workflow Execution**
+   - From the activated virtual environment in the project root, run:
+     - `pytest` (or an equivalent explicit command such as `python -m pytest`).
+   - Use real pytest output only (no simulated or fabricated success messages).
+   - If any tests fail, adjust configuration, tests, or minimal supporting code as necessary (without altering intended business behavior) and re-run `pytest` until all tests pass.
+
+**Output Specification**
+- A fully updated project in the current working directory that satisfies all of the following:
+  - `pyproject.toml`:
+    - Contains no Python 2-related classifiers.
+    - Does not configure the project as a universal wheel.
+    - Has `[tool.ci].python-versions` including at least `"3.9"` and only Python 3 versions.
+    - Has `[tool.isort].profile` set to `"black"`.
+  - `tests/`:
+    - Contains at least one new test file or test case that programmatically verifies each of the above configuration requirements.
+    - Contains tests that validate the core business function(s) still behave correctly for typical and edge-case inputs.
+  - `README.md`:
+    - Documents the project, environment setup steps, dependency installation, and how to run the self-checks (`pytest` and any additional tools you configured).
+- All tests pass successfully when `pytest` is run in a fresh virtual environment following the steps in `README.md`.
+
+**Constraints & Preferences**
+- Do not change externally observable business behavior in `src/prettytable_pr78_demo/` unless absolutely required to maintain compatibility; any such changes must be minimal and behavior-preserving from the caller’s perspective.
+- Focus only on task-related maintenance changes (packaging, CI, tooling, tests, and documentation related to this maintenance task).
+- Avoid large refactors, stylistic-only sweeping changes, or unrelated new features.
+- Use explicit, concrete configuration values; avoid vague settings.
+- Do not fabricate test results; rely only on real tool and test outputs.
+
+**Quality Gates**
+- All tests (including newly added self-check tests) pass with exit code 0 when running `pytest` in the configured virtual environment.
+- The primary test command `pytest` (or `python -m pytest`) succeeds without errors.
+- Any additional tools you configure (such as isort or pre-commit hooks, if you choose to integrate them) run successfully.
+- Following the instructions in `README.md` in a fresh environment reliably reproduces a green test run.
+
+**Critical Instruction (High Priority)**
+You must complete all required maintenance steps, configuration updates, tests, and README documentation so that a single, fresh run of `pytest` in a properly prepared virtual environment passes successfully without requiring any further dialogue or clarification.
