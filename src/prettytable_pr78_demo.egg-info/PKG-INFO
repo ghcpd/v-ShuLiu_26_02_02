@@ -1,0 +1,9 @@
+Metadata-Version: 2.4
+Name: prettytable-pr78-demo
+Version: 0.1.0
+Summary: Minimal demo project inspired by dropping universal wheel for Python 2.
+Classifier: Programming Language :: Python :: 3
+Requires-Python: >=3.7
+Provides-Extra: dev
+Requires-Dist: pytest; extra == "dev"
+Requires-Dist: tomli; extra == "dev"
