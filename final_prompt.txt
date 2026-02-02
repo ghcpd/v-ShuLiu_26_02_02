@@ -1,0 +1,131 @@
+1. Role & Objective
+You are an expert Python maintenance engineer working in a small Python project. Your objective is to update the project’s configuration, CI, tooling, tests, and documentation so that it reflects Python 3-only support, incorporates Python 3.9 into the CI target versions, configures isort to use the Black profile, and adds self-checking tests, all without changing the observable business behavior of the existing library code.
+
+2. Inputs & Context
+- The current working directory is the project root.
+- The project layout is as follows (or logically equivalent):
+  - src/prettytable_pr78_demo/: a very small example library that provides minimal business code.
+  - tests/: tests that currently check configuration-related behavior.
+  - pyproject.toml: project metadata, wheel configuration, isort configuration, and a simplified "CI target Python versions" section.
+  - requirements.txt: development dependencies (pytest and tomli/tomllib for parsing pyproject.toml).
+  - A task description (this prompt) describing the maintenance work.
+- The project effectively only supports Python 3, but its current configuration may still claim Python 2 support and a universal wheel, and CI may not yet target Python 3.9.
+- Assume:
+  - You have read/write access to all files under the current project root.
+  - You only need to work within this project (no larger monorepo context).
+  - The environment is Windows 10 or later.
+  - Python version is 3.10 or later.
+
+3. Step-by-Step Instructions
+3.1 Environment Setup
+- In the project root, create and use a virtual environment:
+  - Run: python -m venv .venv
+  - Activate it (PowerShell example): .venv\Scripts\Activate.ps1
+- Install development dependencies into this virtual environment:
+  - Run: python -m pip install -r requirements.txt
+
+3.2 Preserve Business Behavior
+- Inspect the library code in src/prettytable_pr78_demo/.
+- Do not change the externally observable behavior of any public functions in this package.
+- In particular, any existing core business function(s) (e.g., a table-formatting function) must maintain their behavior for typical and edge-case inputs.
+- Only make changes necessary for configuration, CI, tooling, tests, and documentation.
+
+3.3 Packaging and Metadata Fixes (pyproject.toml)
+- Open pyproject.toml in the project root.
+- Update project metadata so that it no longer declares any Python 2-related classifiers:
+  - Remove any classifier entries indicating support for Python 2 (such as "Programming Language :: Python :: 2", "Programming Language :: Python :: 2.7", etc.).
+  - Ensure that the remaining classifiers correctly indicate Python 3 support only (e.g., "Programming Language :: Python :: 3" and optionally "Programming Language :: Python :: 3 :: Only").
+- Fix the wheel configuration to stop claiming a universal wheel:
+  - In the [tool.wheel] section, ensure the project is not marked as a universal wheel.
+  - For example, set universal = false or remove/adjust any setting that implies Python 2 + 3 universal wheel support.
+
+3.4 CI Target Versions Update (pyproject.toml)
+- In pyproject.toml, locate the simplified CI configuration section, such as [tool.ci].
+- Ensure that the python-versions field includes at least Python 3.9.
+  - Modify or extend the list so that it clearly includes "3.9".
+  - You may also include other Python 3 versions (e.g., "3.8", "3.10", "3.11"), but the presence of "3.9" is mandatory.
+
+3.5 isort Configuration (pyproject.toml)
+- In pyproject.toml, locate the isort configuration section, such as [tool.isort].
+- Update it to use the Black profile:
+  - Set profile = "black".
+- Do not introduce unrelated isort options unless necessary; keep the configuration minimal and focused on aligning with Black.
+
+3.6 Tests and Self-Checks
+- In the tests/ directory, ensure that existing configuration-related tests continue to run and remain relevant.
+- Add at least one new test case or a new test file to act as a self-check for this maintenance task, with the following goals:
+  - Validate that configuration changes have taken effect by reading and parsing pyproject.toml (e.g., using tomllib or tomli):
+    - Assert that there are no Python 2-related classifiers.
+    - Assert that the wheel is no longer configured as universal (e.g., universal is false or absent in a way that does not claim Python 2 + 3 support).
+    - Assert that the CI target versions include "3.9" in tool.ci.python-versions.
+    - Assert that isort uses the Black profile (profile == "black").
+  - Validate that the core business function(s) still behave correctly:
+    - Add tests that call the main library function(s) (e.g., a table/CSV formatting function) with typical and edge-case inputs.
+    - Assert correct output for normal cases (e.g., simple headers and rows).
+    - Assert that invalid input (such as empty headers, if applicable) still raises the same exceptions with the same messages as before.
+- Ensure these new self-check tests would fail on an initial baseline configuration that still claims Python 2 support, has a universal wheel, lacks Python 3.9 in CI, or does not use the Black profile for isort, and only pass after your maintenance changes.
+
+3.7 Optional Test Infrastructure
+- If necessary to import the src/prettytable_pr78_demo package during tests without installing the project, you may add minimal test infrastructure (e.g., a tests/conftest.py) that adjusts sys.path to include the src/ directory.
+- Keep such infrastructure changes minimal and focused purely on enabling tests.
+
+3.8 README Update
+- Create or update README.md in the project root to meet the following requirements:
+  - Include a short description of the project and the maintenance task, without referencing any external repository or PR.
+  - Provide clear, step-by-step instructions to:
+    - Create and activate the virtual environment in the project root.
+    - Install dependencies using requirements.txt.
+    - Run the self-check commands (at minimum, pytest), specifying example commands for a Windows PowerShell environment.
+  - If you introduce any structured report files (such as JSON or other reports), briefly describe what they contain and where they are located. (If no such files are added, explicitly omit this part.)
+
+3.9 Red → Green Workflow
+- Follow this workflow to verify your changes:
+  1) Create and activate the virtual environment as described above.
+  2) Run: python -m pip install -r requirements.txt
+  3) Run: pytest
+  4) Inspect failing tests (if any), adjust configuration, tests, or documentation as needed while preserving business behavior.
+  5) Re-run pytest until all tests pass with exit code 0 and a green summary in the terminal.
+- Do not simulate success; only real pytest output counts.
+
+4. Output Specification
+- Updated pyproject.toml that:
+  - Removes all Python 2-related classifiers.
+  - Does not claim a universal wheel (no Python 2 + 3 universal declaration).
+  - Includes Python 3.9 in tool.ci.python-versions.
+  - Configures isort to use the Black profile.
+- Updated or newly added tests in tests/ that:
+  - Validate configuration invariants from pyproject.toml (no Python 2 classifiers, non-universal wheel, CI includes "3.9", isort profile is "black").
+  - Validate that the core business function still behaves correctly for typical and edge-case inputs.
+- If needed, minimal test infrastructure (e.g., tests/conftest.py) to ensure the src/prettytable_pr78_demo package is importable during test runs.
+- A README.md that:
+  - Describes the project and the maintenance task.
+  - Documents how to create and activate the virtual environment.
+  - Documents how to install dependencies.
+  - Documents how to run pytest (and any other self-check commands if you choose to add them).
+- A fully passing test suite when running pytest in a fresh virtual environment using the documented steps.
+
+5. Constraints & Preferences
+- Do not change the externally observable behavior of functions in src/prettytable_pr78_demo/.
+- Do not introduce unrelated features or large refactors.
+- Keep configuration and test changes tightly scoped to:
+  - Removing Python 2 support declarations.
+  - Updating CI target versions to include Python 3.9.
+  - Configuring isort to use the Black profile.
+  - Adding configuration and business-behavior self-check tests.
+  - Updating documentation to reflect the workflow.
+- Use the existing tooling stack (pytest and tomli/tomllib) described in requirements.txt and pyproject.toml.
+- Assume all work is performed in the current working directory; do not rely on external repositories or additional projects.
+
+6. Quality Gates
+- All tests (including newly added self-check tests) must pass successfully when running pytest in the virtual environment.
+- The pytest command must exit with code 0 and show a green summary.
+- The updated pyproject.toml must:
+  - Contain no Python 2-related classifiers.
+  - Not configure a universal wheel.
+  - Include "3.9" in the CI python-versions list.
+  - Configure isort with profile = "black".
+- Following the README.md instructions in a fresh virtual environment must reliably reproduce a green pytest run.
+- Critical compliance instructions (must be respected above all else):
+  - Do not modify the external behavior of business logic in src/prettytable_pr78_demo/.
+  - Do not introduce unrelated features beyond the described maintenance tasks.
+  - Do not claim Python 2 support anywhere in the updated configuration.
