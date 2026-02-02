@@ -1,0 +1,118 @@
+You are working in a small Python project focused on maintenance tasks. The project already contains basic business logic, configuration, and tests.
+
+Your role:
+- Act as a "maintenance engineer" who, given an issue / PR description, updates this project to satisfy the maintenance requirements.
+- Preserve the existing business semantics while performing changes related to configuration, CI, tooling, and tests.
+
+## 1. Background and goal
+
+This project represents a simplified scenario where:
+- The project effectively only supports Python 3, but the packaging configuration still claims a "universal wheel" (Python 2 + 3).
+- The CI configuration does not yet include Python 3.9 in its target versions.
+- isort and related tooling are not yet configured to use the Black profile.
+- Your job is to clean up these configurations and make sure all tests and self-check commands pass.
+
+Your goal is to complete the required maintenance work **without changing the observable business behavior** and **without introducing unrelated features**.
+
+## 2. Project layout (visible to you)
+
+The current directory is the project root. It typically contains:
+
+- `src/prettytable_pr78_demo/`: a very small example library that provides minimal business code.
+- `tests/`: tests that currently check configuration-related behavior.
+- `pyproject.toml`: project metadata, wheel configuration, isort configuration, and a simplified "CI target Python versions" section.
+- `requirements.txt`: development dependencies (pytest and tomli/tomllib for parsing `pyproject.toml`).
+- This file (or an equivalent prompt) describing the task.
+
+You can assume:
+- You have read/write access to all files under the current project root.
+- You only need to work within this project; there is no larger monorepo context to worry about.
+
+## 3. General constraints
+
+- **Preserve business behavior**:
+  - Do not change the externally observable behavior of functions in `src/prettytable_pr78_demo/`.
+  - If a behavior change is strictly required by a dependency upgrade, it must be clearly justified and kept minimal (for this task, you do not need to change business logic).
+
+- **Make only task-related changes**:
+  - Focus on configuration, CI, and tests that are directly related to the described maintenance task.
+  - Avoid large refactors, style-only sweeping changes, or new features that are not requested.
+
+- **You may edit files and run commands**:
+  - You are expected to edit source code, configuration, and tests.
+  - You should run tests and any relevant tooling commands locally.
+
+- **Environment and virtual environment**:
+  - Assume Windows 10 or later.
+  - Assume Python 3.10 or later.
+  - You must **create and use a virtual environment in the project root**. For example:
+    - `python -m venv .venv`
+    - In PowerShell: `.venv\\Scripts\\Activate.ps1`
+  - Install dependencies in this virtual environment before running tests and tools.
+
+## 4. Maintenance tasks
+
+This task primarily touches the following maintenance categories:
+- Dependency upgrade / Chore: clean up packaging configuration and remove Python 2-related declarations.
+- CI/CD: update the "CI target Python versions" configuration to include Python 3.9.
+- Code style / linting: switch isort to use the Black profile.
+- Test coverage / self-check: use tests to verify that your changes have taken effect.
+
+You must perform at least the following changes:
+
+1. **Packaging and metadata fixes**
+   - Update `pyproject.toml` so that project metadata no longer declares any Python 2-related classifiers.
+   - Ensure the wheel configuration does **not** mark the project as a `universal` wheel (i.e., do not claim Python 2 + 3 support).
+
+2. **CI target versions update**
+   - Update the simplified CI section in `pyproject.toml` so that `tool.ci.python-versions` includes at least Python 3.9.
+   - You may keep or add other Python 3 versions as long as the intent remains clear.
+
+3. **isort configuration**
+   - Update the isort configuration in `pyproject.toml` so that it uses the Black profile (`profile = "black"`).
+
+4. **Add self-check tests (required)**
+   - In the `tests/` directory, **add at least one new test case or a new test file** to serve as a self-check for this prompt:
+     - Use assertions to verify that your configuration changes have actually taken effect.
+     - Check that the main constraints are met, for example:
+       - There are no Python 2-related classifiers.
+       - The wheel is no longer configured as universal.
+       - The CI target versions include Python 3.9.
+       - isort uses the Black profile.
+       - The core business function still behaves correctly for typical and edge-case inputs.
+     - The design of these self-check tests is up to you, but they should cover what you consider the most important success criteria for this task.
+     - Ideally, these new tests fail on the initial (baseline) state and pass only after you have applied the required changes.
+
+## 5. Red  green self-check workflow
+
+1. Create and activate a virtual environment in the current directory:
+   - `python -m venv .venv`
+   - PowerShell: `.venv\\Scripts\\Activate.ps1`
+
+2. Install dependencies:
+   - `pip install -r requirements.txt`
+
+3. Run tests (they may fail initially):
+   - `pytest`
+
+4. Use the pytest terminal output (error types, file names, line numbers, etc.) to understand what is failing and why. Modify code, configuration, and tests accordingly.
+
+5. Re-run `pytest` until **all tests pass** (exit code 0). You must be able to see real pytest success output (e.g., a green summary) in the terminal.
+
+6. You **must not** simulate success by printing fake messages. Only real test framework or tool output counts as success.
+
+## 6. README requirements
+
+By the end of the task, ensure that `README.md` (this file or another clearly indicated one) includes at least:
+- A short description of the project and this maintenance task (without mentioning any external repository or PR this scenario was inspired by).
+- Clear steps to create and activate the virtual environment.
+- Clear steps to install dependencies.
+- Clear steps to run your self-check commands (at minimum, `pytest`, and any other tools you wire in).
+- If you introduce any structured report files (such as `report.json`), briefly describe what they contain and where they are located (not required for this particular task).
+
+## 7. Completion criteria
+
+- All tests you designed (including newly added self-check tests) pass successfully.
+- All primary test commands related to this task (at least `pytest`) exit with code 0.
+- Any additional tools you configure (e.g., isort, pre-commit) run successfully, if you choose to integrate them.
+- Following the instructions in `README.md` in a fresh virtual environment should reliably reproduce your green test run.
