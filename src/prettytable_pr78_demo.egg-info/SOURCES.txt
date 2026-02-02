@@ -1,0 +1,10 @@
+README.md
+pyproject.toml
+src/prettytable_pr78_demo/__init__.py
+src/prettytable_pr78_demo.egg-info/PKG-INFO
+src/prettytable_pr78_demo.egg-info/SOURCES.txt
+src/prettytable_pr78_demo.egg-info/dependency_links.txt
+src/prettytable_pr78_demo.egg-info/requires.txt
+src/prettytable_pr78_demo.egg-info/top_level.txt
+tests/test_config.py
+tests/test_format_table.py
